@@ -9,6 +9,7 @@ service Say {
 // function which can be called
   rpc Send (SayRequest) returns (SayResponse);
   rpc SendStream(SayRequest) returns (stream SayResponse);
+  rpc ReceiveStream(stream SayRequest) returns (SayResponse);
 }
 
 // argument

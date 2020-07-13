@@ -3,7 +3,6 @@ use hello::{SayRequest, SayResponse};
 use tokio::sync::mpsc;
 use tonic::{transport::Server, Request, Response, Status};
 mod hello;
-
 #[derive(Default)]
 pub struct MySay {}
 #[tonic::async_trait]
@@ -36,8 +35,22 @@ impl Say for MySay {
             message: format!("hello {}", request.get_ref().name),
         }))
     }
+    // create a new rpc to receive a stream
+    async fn receive_stream(
+        &self,
+        request: Request<tonic::Streaming<SayRequest>>,
+    ) -> Result<Response<SayResponse>, Status> {
+        // converting request into stream
+        let mut stream = request.into_inner();
+        let mut message = String::from("");
+        // listening on stream
+        while let Some(req) = stream.message().await? {
+            message.push_str(&format!("Hello {}\n", req.name))
+        }
+        // returning response
+        Ok(Response::new(SayResponse { message }))
+    }
 }
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
