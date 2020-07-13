@@ -78,10 +78,21 @@ impl Say for MySay {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
     let say = MySay::default();
+    let ser = SayServer::with_interceptor(say, interceptor);
     println!("Server listening on {}", addr);
-    Server::builder()
-        .add_service(SayServer::new(say))
-        .serve(addr)
-        .await?;
+    Server::builder().add_service(ser).serve(addr).await?;
     Ok(())
+}
+
+fn interceptor(req: Request<()>) -> Result<Request<()>, Status> {
+    let token = match req.metadata().get("authorization") {
+        Some(token) => token.to_str(),
+        None => return Err(Status::unauthenticated("Token not found")),
+    };
+    // do some validation with token here ...
+    if let Ok("token") = token {
+      Ok(req)
+    } else {
+      Err(Status::unauthenticated("Invalid token"))
+    }
 }
