@@ -8,7 +8,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect()
         .await?;
     let mut client = SayClient::new(channel);
-    // creating a stream
+    // creating a client
     let request = tonic::Request::new(iter(vec![
         SayRequest {
             name: String::from("anshul"),
@@ -20,8 +20,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             name: String::from("vijay"),
         },
     ]));
-    // sending stream
-    let response = client.receive_stream(request).await?.into_inner();
-    println!("RESPONSE=\n{}", response.message);
+    // calling rpc
+    let mut response = client.bidirectional(request).await?.into_inner();
+    // listening on the response stream
+    while let Some(res) = response.message().await? {
+        println!("NOTE = {:?}", res);
+    }
     Ok(())
 }

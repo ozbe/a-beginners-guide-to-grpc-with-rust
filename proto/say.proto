@@ -10,6 +10,7 @@ service Say {
   rpc Send (SayRequest) returns (SayResponse);
   rpc SendStream(SayRequest) returns (stream SayResponse);
   rpc ReceiveStream(stream SayRequest) returns (SayResponse);
+  rpc Bidirectional(stream SayRequest) returns (stream SayResponse);
 }
 
 // argument
