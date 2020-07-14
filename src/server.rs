@@ -79,8 +79,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
     let say = MySay::default();
     let ser = SayServer::with_interceptor(say, interceptor);
+    // reading cert and key disk
+    let cert = include_str!("../server.pem");
+    let key = include_str!("../server.key");
+    // creating identity from cert and key
+    let id = tonic::transport::Identity::from_pem(cert.as_bytes(), key.as_bytes());
+    // reading ca root from disk
+    let s = include_str!("../my_ca.pem");
+    // creating certificate
+    let ca = tonic::transport::Certificate::from_pem(s.as_bytes());
+    // creating tls config
+    let tls = tonic::transport::ServerTlsConfig::new()
+        .identity(id)
+        .client_ca_root(ca);
     println!("Server listening on {}", addr);
-    Server::builder().add_service(ser).serve(addr).await?;
+    Server::builder()
+        .tls_config(tls)
+        .add_service(ser)
+        .serve(addr)
+        .await?;
     Ok(())
 }
 
@@ -91,8 +108,8 @@ fn interceptor(req: Request<()>) -> Result<Request<()>, Status> {
     };
     // do some validation with token here ...
     if let Ok("token") = token {
-      Ok(req)
+        Ok(req)
     } else {
-      Err(Status::unauthenticated("Invalid token"))
+        Err(Status::unauthenticated("Invalid token"))
     }
 }
