@@ -28,19 +28,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(req)
     });
 
-    match std::env::args().next().as_deref() {
-        Some("receive-stream") => receive_stream(client),
-        Some("send-stream") => send_stream(client),
-        Some("bidirectional") => bidirectional(client),
-        _ => send(client),
-    }
-    .await?;
+    match std::env::args().skip(1).next().as_deref() {
+        Some("receive-stream") => receive_stream(client).await?,
+        Some("send-stream") => send_stream(client).await?,
+        Some("bidirectional") => bidirectional(client).await?,
+        _ => send(client).await?,
+    };
 
     Ok(())
 }
 
 async fn send(
-    client: SayClient<tonic::transport::Channel>,
+    mut client: SayClient<tonic::transport::Channel>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request = tonic::Request::new(SayRequest {
         name: String::from("anshul"),
@@ -51,7 +50,7 @@ async fn send(
 }
 
 async fn send_stream(
-    client: SayClient<tonic::transport::Channel>,
+    mut client: SayClient<tonic::transport::Channel>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request = tonic::Request::new(SayRequest {
         name: String::from("anshul"),
@@ -66,7 +65,7 @@ async fn send_stream(
 }
 
 async fn receive_stream(
-    client: SayClient<tonic::transport::Channel>,
+    mut client: SayClient<tonic::transport::Channel>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request = tonic::Request::new(iter(vec![
         SayRequest {
@@ -87,7 +86,7 @@ async fn receive_stream(
 }
 
 async fn bidirectional(
-    client: SayClient<tonic::transport::Channel>,
+    mut client: SayClient<tonic::transport::Channel>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request = tonic::Request::new(iter(vec![
         SayRequest {

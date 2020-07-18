@@ -1,1 +1,6 @@
 /target
+*.csr
+*.pem
+*.key
+*.srl
+*.ext
